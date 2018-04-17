@@ -1,10 +1,14 @@
 # Start with empty ubuntu machine
-FROM ubuntu:15.04
+FROM ubuntu:16.04
 
-MAINTAINER Autolab Development Team "autolab-dev@andrew.cmu.edu"
+#MAINTAINER Autolab Development Team "autolab-dev@andrew.cmu.edu"
 
 # Setup correct environment variable
 ENV HOME /root
+ENV DEBIAN_FRONTEND noninteractive
+
+# Change apt source because of Ubuntu vivid is end-of-life
+#RUN sed -i.bak -r 's/(archive|security).ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
 
 # Change to working directory
 WORKDIR /opt
@@ -18,9 +22,9 @@ WORKDIR /opt
 
 # Install dependancies
 RUN apt-get update && apt-get install -y \
-	nginx \
-	curl \
-	git \
+    nginx \
+    curl \
+    git \
     vim \
     supervisor \
     python-pip \
@@ -28,9 +32,9 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     tcl8.5 \
     wget \
-    libgcrypt11-dev \ 
+    libgcrypt11-dev \
     zlib1g-dev \
-	apt-transport-https \
+    apt-transport-https \
     ca-certificates \
     lxc \
     iptables \
@@ -40,22 +44,22 @@ RUN apt-get update && apt-get install -y \
 # Install Redis
 RUN wget http://download.redis.io/releases/redis-stable.tar.gz && tar xzf redis-stable.tar.gz
 WORKDIR /opt/redis-stable
-RUN make && make install 
+RUN make && make install
 WORKDIR /opt/TangoService/Tango/
 
 # Install Docker from Docker Inc. repositories.
 RUN curl -sSL https://get.docker.com/ | sh
 
 # Install the magic wrapper.
-ADD ./wrapdocker /usr/local/bin/wrapdocker
-RUN chmod +x /usr/local/bin/wrapdocker
+# ADD ./wrapdocker /usr/local/bin/wrapdocker
+# RUN chmod +x /usr/local/bin/wrapdocker
 
 # Define additional metadata for our image.
 VOLUME /var/lib/docker
 
-# Create virtualenv to link dependancies 
+# Create virtualenv to link dependancies
 RUN pip install virtualenv && virtualenv .
-# Install python dependancies 
+# Install python dependancies
 RUN pip install -r requirements.txt
 
 RUN mkdir -p /var/log/docker /var/log/supervisor
@@ -69,7 +73,7 @@ RUN cp /opt/TangoService/Tango/deployment/config/redis.conf /etc/redis.conf
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
 
 
-# TODO: 
+# TODO:
 # volumes dir in root dir, supervisor only starts after calling start once , nginx also needs to be started
 # Different log numbers for two different tangos
 # what from nginx forwards requests to tango

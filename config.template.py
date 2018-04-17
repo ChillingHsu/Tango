@@ -30,8 +30,8 @@ class Config:
 
     # Courselabs directory. Must be created before starting Tango
     COURSELABS = "courselabs"
-    
-    # Directory within each courselab where Tango will copy the output 
+
+    # Directory within each courselab where Tango will copy the output
     # for jobs of that courselab
     OUTPUT_FOLDER = "output"
 
@@ -74,6 +74,7 @@ class Config:
     DOCKER_IMAGE_BUILD_TIMEOUT = 300
     DOCKER_RM_TIMEOUT = 5
     # Must be absolute path with trailing slash
+    DOCKER_VOLUME_NAME = 'autograding_vol'
     # Default value of '*'' points this path to /path/to/Tango/volumes/
     DOCKER_VOLUME_PATH = '*'
     DOCKER_HOST_USER = ''
