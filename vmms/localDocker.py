@@ -1,5 +1,5 @@
 #
-# localDocker.py - Implements the Tango VMMS interface to run Tango jobs in 
+# localDocker.py - Implements the Tango VMMS interface to run Tango jobs in
 #                docker containers. In this context, VMs are docker containers.
 #
 import random, subprocess, re, time, logging, threading, os, sys, shutil
@@ -10,7 +10,7 @@ def timeout(command, time_out=1):
     """ timeout - Run a unix command with a timeout. Return -1 on
     timeout, otherwise return the return value from the command, which
     is typically 0 for success, 1-255 for failure.
-    """ 
+    """
 
     # Launch the command
     p = subprocess.Popen(command,
@@ -39,8 +39,8 @@ def timeoutWithReturnStatus(command, time_out, returnValue = 0):
     until the expected value is returned by the command; On timeout,
     return last error code obtained from the command.
     """
-    p = subprocess.Popen(command, 
-                        stdout=open("/dev/null", 'w'), 
+    p = subprocess.Popen(command,
+                        stdout=open("/dev/null", 'w'),
                         stderr=subprocess.STDOUT)
     t = 0.0
     while (t < time_out):
@@ -133,19 +133,21 @@ class LocalDocker:
         """
         instanceName = self.instanceName(vm.id, vm.image)
         volumePath = self.getVolumePath(instanceName)
+        mountPath = '/home/mount'
         args = ['docker', 'run', '--name', instanceName, '-v']
-        args = args + ['%s:%s' % (volumePath, '/home/mount')]
+        args = args + ['%s:%s' % (config.Config.DOCKER_VOLUME_NAME, mountPath)]
         args = args + [vm.image]
         args = args + ['sh', '-c']
-
+        mountPath += '/' + instanceName + '/'
         autodriverCmd = 'autodriver -u %d -f %d -t %d -o %d autolab &> output/feedback' % \
-                        (config.Config.VM_ULIMIT_USER_PROC, 
+                        (config.Config.VM_ULIMIT_USER_PROC,
                         config.Config.VM_ULIMIT_FILE_SIZE,
                         runTimeout, config.Config.MAX_OUTPUT_FILE_SIZE)
 
-        args = args + ['cp -r mount/* autolab/; su autolab -c "%s"; \
-                        cp output/feedback mount/feedback' % 
-                        autodriverCmd]
+        args = args + ['cp -r %s* autolab/; su autolab -c "%s"; \
+                        cp output/feedback %s' %
+                        (mountPath, autodriverCmd,
+                        mountPath + 'feedback')]
 
         self.log.debug('Running job: %s' % str(args))
         ret = timeout(args, runTimeout * 2)
@@ -223,7 +225,7 @@ class LocalDocker:
 
     def getImages(self):
         """ getImages - Executes `docker images` and returns a list of
-        images that can be used to boot a docker container with. This 
+        images that can be used to boot a docker container with. This
         function is a lot of parsing and so can break easily.
         """
         result = set()
@@ -237,5 +239,3 @@ class LocalDocker:
             row_l = row.split(' ')
             result.add(re.sub(r".*/([^/]*)", r"\1", row_l[0]))
         return list(result)
-
-
